@@ -31,17 +31,12 @@
       -moz-osx-font-smoothing: grayscale;
     }
 
-    /* Layout: centered input with history above */
+    /* Layout: fixed centered input with history above */
     .app {
       height: 100vh;
       width: 100vw;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
       position: relative;
-      padding-top: 40px; /* reduced from larger margin */
+      overflow: hidden;
     }
 
     .inner {
@@ -128,17 +123,21 @@
 
     /* History list (above input) */
     .history-wrap {
+      position: absolute;
+      top: 40px;
+      left: 50%;
+      transform: translateX(-50%);
       width: min(100%, var(--max-width));
-      max-height: 45vh; /* increased space */
+      height: calc(50vh - 60px); /* space above centered input */
       overflow: hidden;
-      margin-bottom: 20px;
     }
     .history {
-      max-height: 45vh;
+      height: 100%;
       overflow-y: auto;
       padding: 0 clamp(16px, 4vw, 40px);
       display: flex;
       flex-direction: column;
+      justify-content: flex-end;
       gap: 8px;
       scroll-behavior: smooth;
     }
@@ -162,11 +161,15 @@
       outline: 1px solid var(--accent);
     }
 
-    /* Center input */
+    /* Fixed center input */
     .input-wrap { 
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
       width: min(100%, var(--max-width));
       padding: 0 clamp(16px, 4vw, 40px);
-      margin-bottom: 120px; /* space for toolbar */
+      z-index: 5;
     }
 
     .input {
