@@ -309,22 +309,30 @@
       font-size: 9px;
     }
 
-    /* Always-on arrow strip (D-pad) */
+    /* Always-on arrow strip (D-pad) - Box Layout */
     .arrow-strip {
       position: fixed;
-      bottom: 14px;
-      left: 160px; /* positioned right of glyph toggle */
-      display: flex;
-      gap: 4px;
+      bottom: 70px;
+      left: 20px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: auto auto auto;
+      gap: 3px;
       z-index: 15;
+      background: rgba(19, 19, 19, 0.95);
+      backdrop-filter: blur(8px);
+      border: 1px solid #2a2a2a;
+      border-radius: 12px;
+      padding: 8px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
     }
     
     .arrow-btn {
-      width: 36px;
-      height: 28px;
+      width: 34px;
+      height: 34px;
       background: #131313;
       border: 1px solid #1e1e1e;
-      border-radius: 6px;
+      border-radius: 8px;
       color: var(--fg);
       font: 600 16px/1 var(--mono);
       cursor: pointer;
@@ -337,12 +345,39 @@
     .arrow-btn:hover {
       background: #202020;
       border-color: #2a2a2a;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
     }
     
     .style-btn {
-      width: 48px;
-      font-size: 10px;
+      grid-column: 1 / -1;
+      height: 28px;
+      font-size: 9px;
+      font-weight: 600;
       color: var(--muted);
+      background: #1a1a1a;
+      border-radius: 6px;
+    }
+    
+    /* Grid positioning for D-pad layout */
+    .arrow-btn[data-arrow="↑"] {
+      grid-column: 1 / -1;
+      grid-row: 1;
+    }
+    
+    .arrow-btn[data-arrow="←"] {
+      grid-column: 1;
+      grid-row: 2;
+    }
+    
+    .arrow-btn[data-arrow="→"] {
+      grid-column: 2;
+      grid-row: 2;
+    }
+    
+    .arrow-btn[data-arrow="↓"] {
+      grid-column: 1 / -1;
+      grid-row: 3;
     }
     
     /* Bottom toolbar for symbols (3 rows) */
@@ -350,7 +385,7 @@
       position: fixed; left: 0; right: 0; bottom: 0; height: var(--toolbar-h);
       border-top: 1px solid #161616;
       background: linear-gradient(0deg, rgba(0,0,0,.45), rgba(0,0,0,0));
-      padding: 8px 10px calc(8px + env(safe-area-inset-bottom)) 280px; /* more left padding for arrow strip */
+      padding: 8px 10px calc(8px + env(safe-area-inset-bottom)) 20px;
       display: grid;
       grid-template-rows: repeat(3, 28px);
       grid-auto-flow: column;
@@ -456,12 +491,12 @@
     </div>
   </div>
   
-  <!-- Always-on arrow strip -->
+  <!-- Always-on arrow strip - Box Layout -->
   <div class="arrow-strip">
-    <button class="arrow-btn" data-arrow="←" title="Insert left arrow">←</button>
     <button class="arrow-btn" data-arrow="↑" title="Insert up arrow">↑</button>
-    <button class="arrow-btn" data-arrow="↓" title="Insert down arrow">↓</button>
+    <button class="arrow-btn" data-arrow="←" title="Insert left arrow">←</button>
     <button class="arrow-btn" data-arrow="→" title="Insert right arrow">→</button>
+    <button class="arrow-btn" data-arrow="↓" title="Insert down arrow">↓</button>
     <button class="arrow-btn style-btn" id="arrowStyle" title="Cycle arrow styles">Thin</button>
   </div>
 
