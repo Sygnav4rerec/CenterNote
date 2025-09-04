@@ -309,22 +309,40 @@
       font-size: 9px;
     }
 
-    /* Always-on arrow strip (D-pad) - Box Layout */
-    .arrow-strip {
+    /* Bottom toolbar controls - left to right layout */
+    .toolbar-controls {
       position: fixed;
-      bottom: 70px;
-      left: 20px;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      grid-template-rows: auto auto auto;
-      gap: 3px;
+      bottom: 8px;
+      left: 8px;
+      display: flex;
+      gap: 8px;
       z-index: 15;
+      align-items: flex-end;
+    }
+    
+    /* Glyph toggle box */
+    .glyph-toggle-box {
       background: rgba(19, 19, 19, 0.95);
       backdrop-filter: blur(8px);
       border: 1px solid #2a2a2a;
       border-radius: 12px;
       padding: 8px;
       box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    }
+    
+    /* Arrow control box - 2x2 + style */
+    .arrow-box {
+      background: rgba(19, 19, 19, 0.95);
+      backdrop-filter: blur(8px);
+      border: 1px solid #2a2a2a;
+      border-radius: 12px;
+      padding: 8px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: auto auto auto;
+      gap: 3px;
+      width: 84px;
     }
     
     .arrow-btn {
@@ -359,9 +377,14 @@
       border-radius: 6px;
     }
     
-    /* Grid positioning for D-pad layout */
+    /* 2x2 arrow grid positioning */
     .arrow-btn[data-arrow="↑"] {
-      grid-column: 1 / -1;
+      grid-column: 1;
+      grid-row: 1;
+    }
+    
+    .arrow-btn[data-arrow="→"] {
+      grid-column: 2;
       grid-row: 1;
     }
     
@@ -370,14 +393,9 @@
       grid-row: 2;
     }
     
-    .arrow-btn[data-arrow="→"] {
+    .arrow-btn[data-arrow="↓"] {
       grid-column: 2;
       grid-row: 2;
-    }
-    
-    .arrow-btn[data-arrow="↓"] {
-      grid-column: 1 / -1;
-      grid-row: 3;
     }
     
     /* Bottom toolbar for symbols (3 rows) */
@@ -466,8 +484,7 @@
     <div class="toolbar" id="toolbar" aria-label="Symbols toolbar"></div>
   </main>
 
-  <div class="glyph-menu">
-    <button id="glyphToggle" class="glyph-toggle">Glyphs ▲</button>
+  <div class="glyph-menu" style="display: none;">
     <div id="glyphPanel" class="glyph-panel" aria-hidden="true">
       <div class="panel-tabs" style="display: flex; margin-bottom: 12px; border-bottom: 1px solid #333;">
         <button id="categoriesTab" class="panel-tab active" style="flex: 1; padding: 8px; background: none; border: none; color: var(--fg); cursor: pointer; border-bottom: 2px solid var(--accent);">Categories</button>
@@ -491,13 +508,21 @@
     </div>
   </div>
   
-  <!-- Always-on arrow strip - Box Layout -->
-  <div class="arrow-strip">
-    <button class="arrow-btn" data-arrow="↑" title="Insert up arrow">↑</button>
-    <button class="arrow-btn" data-arrow="←" title="Insert left arrow">←</button>
-    <button class="arrow-btn" data-arrow="→" title="Insert right arrow">→</button>
-    <button class="arrow-btn" data-arrow="↓" title="Insert down arrow">↓</button>
-    <button class="arrow-btn style-btn" id="arrowStyle" title="Cycle arrow styles">Thin</button>
+  <!-- Bottom toolbar controls -->
+  <div class="toolbar-controls">
+    <!-- Glyph toggle box -->
+    <div class="glyph-toggle-box">
+      <button id="glyphToggle" class="glyph-toggle" title="Toggle glyph panel">Glyphs ▲</button>
+    </div>
+    
+    <!-- Arrow control box -->
+    <div class="arrow-box">
+      <button class="arrow-btn" data-arrow="↑" title="Insert up arrow">↑</button>
+      <button class="arrow-btn" data-arrow="→" title="Insert right arrow">→</button>
+      <button class="arrow-btn" data-arrow="←" title="Insert left arrow">←</button>
+      <button class="arrow-btn" data-arrow="↓" title="Insert down arrow">↓</button>
+      <button class="arrow-btn style-btn" id="arrowStyle" title="Cycle arrow styles">Thin</button>
+    </div>
   </div>
 
   <div class="hint">Enter → commit • Shift+Enter → newline • <kbd>Esc</kbd> → clear</div>
