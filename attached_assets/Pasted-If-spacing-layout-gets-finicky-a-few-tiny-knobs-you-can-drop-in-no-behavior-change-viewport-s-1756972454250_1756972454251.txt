@@ -1,0 +1,101 @@
+If spacing/layout gets finicky, a few tiny knobs you can drop in (no behavior change):
+
+viewport + safe area
+
+:root { --toolbar-h: 96px; }
+.app { height: 100svh; } /* steadier on mobile than 100vh */
+.toolbar { padding-bottom: calc(8px + env(safe-area-inset-bottom)); }
+.input-wrap {
+  top: calc((100svh - var(--toolbar-h)) / 2);
+}
+
+
+history comfort
+
+.history { gap: 6px; scrollbar-gutter: stable; } /* avoids nudge when scrollbar appears */
+.line { line-height: 1.55; letter-spacing: 0.01em; }
+
+
+micro breathing room
+
+.input { padding-inline: 8px; }
+
+
+⚠️ One tiny cleanup to keep the console quiet:
+
+There’s an old renderHistory() above that references getActiveNote() and has an extra });. Since you already redefine renderHistory() correctly below, just delete that first one (the whole earlier block). That’ll prevent a syntax error and keeps the script tidy.
+
+If you want, I can fold these tweaks straight into the canvas; otherwise, keep cruising—sounds like you’re basically there. 🚀
+
+You said:
+Yes. We are getting there. We correct something and then something new arises. LOL.
+ChatGPT said:
+
+haha yep — tame one pixel and three more get feisty 😄
+you’re super close. since you’re in spacing/layout polish mode, here are a few surgical, copy-paste micro-tweaks (no behavior change) that will make the surface feel rock-solid across devices.
+
+1) Viewport + safe areas (mobile polish)
+
+Use small-viewport units and account for notches so the center math stays perfect.
+
+:root { --toolbar-h: 96px; }
+
+/* steadier on mobile than 100vh */
+.app { height: 100svh; }
+
+/* keep editor centered between top and toolbar */
+.input-wrap {
+  top: calc((100svh - var(--toolbar-h)) / 2);
+}
+
+/* avoid glyph bar overlapping content at the very bottom on tall histories */
+.history { padding-bottom: calc(var(--toolbar-h) + 12px); }
+
+/* hint clears the toolbar on all devices */
+.hint { bottom: calc(12px + env(safe-area-inset-bottom)); }
+.toolbar { padding-bottom: calc(8px + env(safe-area-inset-bottom)); }
+
+2) Scroll stability + line rhythm
+
+Smoother feel when the scrollbar appears and slightly tighter leading.
+
+.history { gap: 6px; scrollbar-gutter: stable; }
+.line { line-height: 1.55; letter-spacing: 0.01em; }
+.input { padding-inline: 8px; } /* tiny breathing room */
+
+3) Reduce motion (accessibility nicety)
+
+Respect users who prefer less movement.
+
+@media (prefers-reduced-motion: reduce) {
+  .history { scroll-behavior: auto; }
+  .line.appear { animation: none; }
+}
+
+4) One real bug to delete (you’ll see it in your current file)
+
+You’ve got an old, broken renderHistory() still sitting above the good one (it references getActiveNote() and has stray });). That can throw a syntax error and/or overwrite unexpectedly.
+
+Fix: remove that earlier renderHistory() block entirely so only this working one remains:
+
+function renderHistory() {
+  historyEl.innerHTML = '';
+  const frag = document.createDocumentFragment();
+  state.lines.forEach((text, idx) => {
+    const div = document.createElement('div');
+    div.className = 'line';
+    div.dataset.index = idx;
+    div.textContent = text;
+    frag.appendChild(div);
+  });
+  historyEl.appendChild(frag);
+  historyEl.scrollTop = historyEl.scrollHeight;
+}
+
+5) Tiny toolbar cleanups (optional)
+
+The symbols array has a couple duplicates (∝, ≈, ∞). No harm, but you can trim them to keep the palette tidy.
+
+If you want the glyph buttons a hair larger for touch, bump to:
+
+.sym { min-width: 40px; height: 32px; font-size: 18px; }
