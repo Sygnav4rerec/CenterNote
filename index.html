@@ -12,14 +12,14 @@
       --muted: #8a8a8a;
       --accent: #b3b3b3;
       --danger: #ff5d5d;
-      --line-size: 18px;      /* history text size */
-      --input-size: 30px;     /* input text size */
+      --line-size: 20px;      /* history text size (scaled with 24pt input) */
+      --input-size: 32px;     /* input text size (24pt) */
       --ui-size: 14px;
       --max-width: 1000px;
       --toolbar-h: 96px;      /* toolbar height for calculations */
       --center-gap: 22px;     /* gap between history and input areas */
-      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
-      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --font: "Helvetica Neue", Helvetica, ui-sans-serif, system-ui, -apple-system, sans-serif;
+      --mono: "Helvetica Neue", Helvetica, ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
     }
 
     * { box-sizing: border-box; }
@@ -360,9 +360,9 @@
     /* Responsive tweaks */
     @media (max-width: 520px) {
       :root { 
-        --input-size: 26px; 
-        --line-size: 16px;
-        --center-gap: 18px; /* tighter gap on mobile */
+        --input-size: 28px;  /* scaled down for mobile but still comfortable */
+        --line-size: 18px;    /* proportionally scaled */
+        --center-gap: 18px;   /* tighter gap on mobile */
       }
       .menu-btn { padding: 8px 10px; }
       .dropdown { min-width: 200px; }
