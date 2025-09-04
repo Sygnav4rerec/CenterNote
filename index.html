@@ -129,10 +129,10 @@
       left: 50%;
       transform: translateX(-50%);
       width: min(100%, var(--max-width));
-      height: calc(50svh - 120px); /* clear separation from input */
-      overflow: visible; /* allow scrolling */
-      border-bottom: 1px solid rgba(255,255,255,0.05); /* subtle separator */
-      padding-bottom: 20px;
+      height: calc(50svh - 200px); /* much more separation from input */
+      overflow: visible;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      padding-bottom: 40px; /* extra buffer space */
     }
     .history {
       height: 100%;
@@ -183,15 +183,17 @@
     /* Current input window (center area) */
     .input-wrap { 
       position: fixed;
-      top: calc((100svh - var(--toolbar-h)) / 2);
+      top: calc(60svh); /* move down to avoid overlap */
       left: 50%;
       transform: translate(-50%, -50%);
       width: min(100%, var(--max-width));
-      padding: 20px clamp(16px, 4vw, 40px); /* generous padding for multi-line */
-      z-index: 5;
-      background: rgba(0,0,0,0.3); /* subtle background to separate areas */
+      padding: 20px clamp(16px, 4vw, 40px);
+      z-index: 10; /* higher z-index */
+      background: rgba(11,11,11,0.95); /* more opaque background */
+      border: 1px solid rgba(255,255,255,0.1);
       border-radius: 12px;
-      backdrop-filter: blur(8px);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
     }
 
     .input {
