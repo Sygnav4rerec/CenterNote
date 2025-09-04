@@ -31,15 +31,16 @@
       -moz-osx-font-smoothing: grayscale;
     }
 
-    /* Layout: history (scrolling) / input (fixed center) / spacer */
+    /* Layout: centered input with history above */
     .app {
       height: 100vh;
       width: 100vw;
-      display: grid;
-      grid-template-rows: 1fr auto 96px; /* bottom toolbar keeps input centered */
+      display: flex;
+      flex-direction: column;
       align-items: center;
-      justify-items: center;
+      justify-content: center;
       overflow: hidden;
+      position: relative;
     }
 
     .inner {
@@ -47,21 +48,40 @@
       padding: 24px clamp(16px, 4vw, 40px);
     }
 
-    /* Minimal top menu button */
+    /* Top toolbar with icons */
     .topbar {
       position: fixed;
       top: 10px;
       right: 12px;
       z-index: 10;
       user-select: none;
+      display: flex;
+      gap: 8px;
+      align-items: center;
     }
+    .icon-btn {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      color: var(--fg);
+      background: transparent;
+      border: 1px solid #222;
+      border-radius: 8px;
+      cursor: pointer;
+      opacity: 0.6;
+      transition: opacity .2s ease, background .2s ease, border-color .2s ease;
+    }
+    .icon-btn:hover { opacity: 1; border-color: #333; background: #111; }
     .menu-btn {
       font: 600 var(--ui-size)/1 var(--font);
       color: var(--fg);
       background: transparent;
       border: 1px solid #222;
-      padding: 10px 12px;
-      border-radius: 10px;
+      padding: 8px 10px;
+      border-radius: 8px;
       cursor: pointer;
       opacity: 0.6;
       transition: opacity .2s ease, background .2s ease, border-color .2s ease;
@@ -72,46 +92,57 @@
       position: absolute;
       top: 40px;
       right: 0;
-      min-width: 220px;
+      min-width: 280px;
+      max-height: 300px;
       background: #0f0f0f;
       border: 1px solid #1e1e1e;
       border-radius: 12px;
       padding: 6px;
       box-shadow: 0 12px 30px rgba(0,0,0,0.55);
       display: none;
+      overflow-y: auto;
     }
     .dropdown.open { display: block; }
-    .dropdown button, .dropdown a {
+    .dropdown .note-item {
       width: 100%;
       text-align: left;
       background: transparent;
       border: 0;
       color: var(--fg);
-      font: 500 var(--ui-size)/1.2 var(--font);
-      padding: 10px 12px;
-      border-radius: 8px;
+      font: 400 var(--ui-size)/1.3 var(--font);
+      padding: 8px 12px;
+      border-radius: 6px;
       cursor: pointer;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      white-space: nowrap;
     }
-    .dropdown button:hover, .dropdown a:hover { background: #161616; }
-    .danger { color: var(--danger); }
-    .separator { height: 1px; background: #1a1a1a; margin: 6px 0; border-radius: 1px; }
+    .dropdown .note-item:hover { background: #161616; }
+    .dropdown .empty-state {
+      padding: 20px 12px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+    }
 
-    /* History list (top area) */
+    /* History list (above input) */
     .history-wrap {
-      align-self: end;
       width: min(100%, var(--max-width));
-      height: 100%;
-      overflow: hidden; /* container hidden to keep minimal visuals */
+      max-height: 40vh;
+      overflow: hidden;
+      margin-bottom: 20px;
     }
     .history {
-      height: 100%;
+      max-height: 40vh;
       overflow-y: auto;
-      padding: 0 clamp(16px, 4vw, 40px) 6px;
+      padding: 0 clamp(16px, 4vw, 40px);
       display: flex;
       flex-direction: column;
-      justify-content: flex-end; /* keep last items near the input */
       gap: 8px;
       scroll-behavior: smooth;
+    }
+    .history:empty {
+      display: none;
     }
 
     .line { 
@@ -133,15 +164,8 @@
     /* Center input */
     .input-wrap { 
       width: min(100%, var(--max-width));
-      /* Fixed position so the editor is always vertically centered in the usable viewport */
-      position: fixed;
-      left: 50%;
-      top: calc((100vh - 96px) / 2); /* center between top and the 96px toolbar */
-      transform: translate(-50%, -50%);
       padding: 0 clamp(16px, 4vw, 40px);
-      display: grid;
-      place-items: center;
-      z-index: 5;
+      margin-bottom: 120px; /* space for toolbar */
     }
 
     .input {
@@ -154,7 +178,7 @@
       font-family: var(--mono);
       font-size: var(--input-size);
       line-height: 1.5;
-      text-align: center;
+      text-align: left;
       min-height: calc(var(--input-size) * 1.5);
     }
 
@@ -186,12 +210,72 @@
       font-family: var(--mono);
     }
 
+    /* Glyph category menu (bottom left) */
+    .glyph-menu {
+      position: fixed;
+      left: 14px;
+      bottom: 14px;
+      z-index: 10;
+    }
+    .glyph-toggle {
+      background: #131313;
+      border: 1px solid #1e1e1e;
+      color: var(--fg);
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font: 500 12px/1 var(--font);
+      opacity: 0.8;
+      transition: opacity .2s ease;
+    }
+    .glyph-toggle:hover { opacity: 1; }
+    
+    .glyph-panel {
+      position: absolute;
+      bottom: 40px;
+      left: 0;
+      width: 280px;
+      max-height: 350px;
+      background: #0f0f0f;
+      border: 1px solid #1e1e1e;
+      border-radius: 12px;
+      padding: 12px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.55);
+      display: none;
+      overflow-y: auto;
+    }
+    .glyph-panel.open { display: block; }
+    
+    .category-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .cat-btn {
+      background: #161616;
+      border: 1px solid #222;
+      color: var(--fg);
+      padding: 10px 8px;
+      border-radius: 8px;
+      cursor: pointer;
+      font: 500 11px/1.2 var(--font);
+      text-align: center;
+      transition: background .2s ease;
+    }
+    .cat-btn:hover { background: #202020; }
+    .cat-btn small {
+      display: block;
+      color: var(--muted);
+      font-size: 9px;
+    }
+
     /* Bottom toolbar for symbols (3 rows) */
     .toolbar {
       position: fixed; left: 0; right: 0; bottom: 0; height: 96px;
       border-top: 1px solid #161616;
       background: linear-gradient(0deg, rgba(0,0,0,.45), rgba(0,0,0,0));
-      padding: 8px 10px;
+      padding: 8px 10px 8px 80px; /* leave space for glyph menu */
       display: grid;
       grid-template-rows: repeat(3, 28px);
       grid-auto-flow: column;
@@ -225,15 +309,13 @@
 </head>
 <body>
   <div class="topbar" aria-label="Menu">
-    <button id="menuBtn" class="menu-btn" title="Menu">Menu ▾</button>
+    <button id="exportTxt" class="icon-btn" title="Export as .txt">⬇</button>
+    <button id="increaseFont" class="icon-btn" title="Increase text size">+</button>
+    <button id="decreaseFont" class="icon-btn" title="Decrease text size">-</button>
+    <button id="clearAll" class="icon-btn" title="Clear all">×</button>
+    <button id="menuBtn" class="menu-btn" title="Notes">Notes ▾</button>
     <div id="menu" class="dropdown" role="menu" aria-hidden="true">
-      <button id="exportTxt" role="menuitem">Export as .txt</button>
-      <button id="increaseFont" role="menuitem">Increase text size</button>
-      <button id="decreaseFont" role="menuitem">Decrease text size</button>
-      <div class="separator"></div>
-      <button id="clearAll" class="danger" role="menuitem">Clear all</button>
-      <div class="separator"></div>
-      <button id="help" role="menuitem">Help / Shortcuts</button>
+      <div id="notesList"></div>
     </div>
   </div>
 
@@ -249,22 +331,51 @@
     <div class="toolbar" id="toolbar" aria-label="Symbols toolbar"></div>
   </main>
 
+  <div class="glyph-menu">
+    <button id="glyphToggle" class="glyph-toggle">Glyphs ▲</button>
+    <div id="glyphPanel" class="glyph-panel" aria-hidden="true">
+      <div id="categoryGrid" class="category-grid"></div>
+      <div style="font-size: 11px; color: var(--muted); text-align: center; margin-top: 8px;">Select a category to load glyphs</div>
+    </div>
+  </div>
+
   <div class="hint">Enter → commit line • Shift+Enter → newline • <kbd>Esc</kbd> → clear current</div>
 
   <script>
     ;(() => {
       const STORAGE_KEY = 'centered-notes-v1';
+      const NOTES_KEY = 'centered-notes-list';
       const state = {
         lines: [],
         lineSize: parseInt(getComputedStyle(document.documentElement).getPropertyValue('--line-size')),
-        inputSize: parseInt(getComputedStyle(document.documentElement).getPropertyValue('--input-size'))
+        inputSize: parseInt(getComputedStyle(document.documentElement).getPropertyValue('--input-size')),
+        currentNote: null,
+        notes: []
       };
+      
+      // Glyph categories
+      const categories = {
+        'Greek': ['α','β','γ','δ','ε','ζ','η','θ','ι','κ','λ','μ','ν','ξ','ο','π','ρ','σ','τ','υ','φ','χ','ψ','ω','Γ','Δ','Θ','Λ','Ξ','Π','Σ','Φ','Ψ','Ω'],
+        'Operators': ['±','×','÷','∙','⋅','·','≈','≠','≤','≥','≡','∝','∴','∵','∥','⊥','≅','≃','≜','∓','∂'],
+        'Math': ['√','∛','∜','∑','∏','∫','∬','∭','∮','∞','∇','∆','∂','′','″','‴','°'],
+        'Geometry': ['∠','⊾','∟','⟂','∥','⊙','⊕','⊗','⊡','△','▭','◻','◇','◯','∘'],
+        'Chemistry': ['→','⇌','⇋','⇄','⇅','⇆','⟶','⟷','↑','↓','Å','°','•','⟨','⟩'],
+        'Arrows': ['→','←','↑','↓','↔','↕','⇒','⇐','⇑','⇓','⇔','⟶','⟵','⟷'],
+        'Currency': ['$','€','£','¥','₩','₹','₽','₺','₫','₴','₦','₪','₱','₿'],
+        'Symbols': ['☀','☁','★','☆','☎','☑','☒','♠','♣','♥','♦','♪','♫','♬']
+      };
+      let currentCategory = 'Greek';
 
       const historyEl = document.getElementById('history');
       const editor = document.getElementById('editor');
       const app = document.getElementById('app');
       const menu = document.getElementById('menu');
       const menuBtn = document.getElementById('menuBtn');
+      const toolbar = document.getElementById('toolbar');
+      const glyphToggle = document.getElementById('glyphToggle');
+      const glyphPanel = document.getElementById('glyphPanel');
+      const categoryGrid = document.getElementById('categoryGrid');
+      const notesList = document.getElementById('notesList');
 
       // Focus editor on load and on background click
       window.addEventListener('load', () => editor.focus());
@@ -297,7 +408,11 @@
       function load() {
         try {
           const raw = localStorage.getItem(STORAGE_KEY);
-          if (!raw) return;
+          if (!raw) {
+            // Create default note
+            createNewNote();
+            return;
+          }
           const data = JSON.parse(raw);
           if (Array.isArray(data.lines)) {
             state.lines = data.lines;
@@ -305,6 +420,8 @@
           }
           if (data.lineSize) setLineSize(data.lineSize);
           if (data.inputSize) setInputSize(data.inputSize);
+          
+          loadNotes();
         } catch (_) {}
       }
 
@@ -315,6 +432,80 @@
           inputSize: state.inputSize
         };
         localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+        saveCurrentNote();
+      }
+      
+      function loadNotes() {
+        try {
+          const raw = localStorage.getItem(NOTES_KEY);
+          if (raw) {
+            state.notes = JSON.parse(raw);
+            renderNotesList();
+          }
+        } catch (_) {}
+      }
+      
+      function saveNotes() {
+        localStorage.setItem(NOTES_KEY, JSON.stringify(state.notes));
+      }
+      
+      function createNewNote() {
+        const noteId = Date.now().toString();
+        const note = {
+          id: noteId,
+          title: 'New Note',
+          lines: [],
+          created: new Date().toISOString()
+        };
+        state.notes.push(note);
+        state.currentNote = noteId;
+        state.lines = [];
+        renderHistory();
+        saveNotes();
+        renderNotesList();
+      }
+      
+      function saveCurrentNote() {
+        if (!state.currentNote) return;
+        const note = state.notes.find(n => n.id === state.currentNote);
+        if (note) {
+          note.lines = [...state.lines];
+          note.title = state.lines[0] || 'New Note';
+          saveNotes();
+          renderNotesList();
+        }
+      }
+      
+      function renderNotesList() {
+        if (!notesList) return;
+        notesList.innerHTML = '';
+        
+        if (state.notes.length === 0) {
+          notesList.innerHTML = '<div class="empty-state">No notes yet</div>';
+          return;
+        }
+        
+        state.notes.forEach(note => {
+          const div = document.createElement('div');
+          div.className = 'note-item';
+          div.textContent = note.title;
+          div.title = note.title;
+          div.addEventListener('click', () => {
+            loadNote(note.id);
+            menu.classList.remove('open');
+          });
+          notesList.appendChild(div);
+        });
+      }
+      
+      function loadNote(noteId) {
+        const note = state.notes.find(n => n.id === noteId);
+        if (note) {
+          state.currentNote = noteId;
+          state.lines = [...note.lines];
+          renderHistory();
+          save();
+        }
       }
 
       // Render history lines (FIXED VERSION)
@@ -334,12 +525,7 @@
 
       function addLine(text) {
         state.lines.push(text);
-        const div = document.createElement('div');
-        div.className = 'line';
-        div.dataset.index = state.lines.length - 1;
-        div.textContent = text;
-        historyEl.appendChild(div);
-        historyEl.scrollTop = historyEl.scrollHeight;
+        renderHistory();
         save();
       }
 
@@ -408,7 +594,7 @@
         el.addEventListener('blur', onBlur);
       }
 
-      // Menu actions
+      // Icon actions
       document.getElementById('exportTxt').addEventListener('click', () => {
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
         const text = state.lines.join('\n');
@@ -421,30 +607,24 @@
         a.click();
         a.remove();
         URL.revokeObjectURL(url);
-        menu.classList.remove('open');
       });
 
       document.getElementById('increaseFont').addEventListener('click', () => {
         setInputSize(state.inputSize + 2);
         setLineSize(state.lineSize + 1);
       });
+      
       document.getElementById('decreaseFont').addEventListener('click', () => {
         setInputSize(state.inputSize - 2);
         setLineSize(state.lineSize - 1);
       });
 
       document.getElementById('clearAll').addEventListener('click', () => {
-        if (confirm('Clear all notes? This cannot be undone.')) {
+        if (confirm('Clear current note? This cannot be undone.')) {
           state.lines = [];
           save();
           renderHistory();
         }
-        menu.classList.remove('open');
-      });
-
-      document.getElementById('help').addEventListener('click', () => {
-        alert('Centered Notes\n\n• Enter: commit line to history (input stays centered)\n• Shift+Enter: newline within the current entry\n• Esc: clear current entry or close menu\n• Double-click any line to edit it inline\n• Export .txt from the Menu\n• Font size controls in Menu\n• Data persists locally in your browser (localStorage).');
-        menu.classList.remove('open');
       });
 
       // Close dropdown when clicking outside
@@ -454,18 +634,44 @@
         }
       });
 
-      // Symbols toolbar (3 rows) — math / chem / glyphs
-      const toolbar = document.getElementById('toolbar');
-      const symbols = ['π','θ','Σ','∞','±','≈','≠','≤','≥','×','÷','√','∫','∑','Δ','μ','λ','α','β','γ','Ω','°','→','↔','≡','∘','⋅','∂','Å','‰','ƒ','∇','∝','∴','∵','∩','∪','⊂','⊃','⊆','⊇','∈','∉','∅','⇌','↑','↓','•','℃','§','η','ϕ','ψ','χ','ω','⊗','⊕','∥','⊥','∠','∽','∝','≈','≅','≜','⌈','⌉','⌊','⌋','∞'];
+      // Category management and toolbar rendering
+      function renderCategoryButtons() {
+        if (!categoryGrid) return;
+        categoryGrid.innerHTML = '';
+        Object.entries(categories).forEach(([name, symbols]) => {
+          const btn = document.createElement('button');
+          btn.className = 'cat-btn';
+          btn.innerHTML = `${name}<small>${symbols.length} glyphs</small>`;
+          btn.addEventListener('click', () => {
+            currentCategory = name;
+            renderToolbar();
+            glyphPanel.classList.remove('open');
+          });
+          categoryGrid.appendChild(btn);
+        });
+      }
 
-      function renderToolbar(){
+      function renderToolbar() {
         if (!toolbar) return;
-        toolbar.innerHTML='';
-        symbols.forEach(s=>{
-          const b=document.createElement('button');
-          b.className='sym'; b.type='button'; b.textContent=s; b.title='Insert '+s;
-          b.addEventListener('click',()=>insertAtCaret(getActiveEditable(),s));
+        toolbar.innerHTML = '';
+        const symbols = categories[currentCategory] || [];
+        symbols.forEach(s => {
+          const b = document.createElement('button');
+          b.className = 'sym';
+          b.type = 'button';
+          b.textContent = s;
+          b.title = `Insert ${s}`;
+          b.addEventListener('click', () => insertAtCaret(getActiveEditable(), s));
           toolbar.appendChild(b);
+        });
+      }
+      
+      // Glyph panel toggle
+      if (glyphToggle && glyphPanel) {
+        glyphToggle.addEventListener('click', () => {
+          const open = glyphPanel.classList.toggle('open');
+          glyphPanel.setAttribute('aria-hidden', open ? 'false' : 'true');
+          glyphToggle.textContent = open ? 'Glyphs ▼' : 'Glyphs ▲';
         });
       }
 
@@ -486,6 +692,7 @@
       }
 
       // Initialize
+      renderCategoryButtons();
       renderToolbar();
       load();
     })();
