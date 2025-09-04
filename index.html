@@ -309,12 +309,48 @@
       font-size: 9px;
     }
 
+    /* Always-on arrow strip (D-pad) */
+    .arrow-strip {
+      position: fixed;
+      bottom: 14px;
+      left: 160px; /* positioned right of glyph toggle */
+      display: flex;
+      gap: 4px;
+      z-index: 15;
+    }
+    
+    .arrow-btn {
+      width: 36px;
+      height: 28px;
+      background: #131313;
+      border: 1px solid #1e1e1e;
+      border-radius: 6px;
+      color: var(--fg);
+      font: 600 16px/1 var(--mono);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+    }
+    
+    .arrow-btn:hover {
+      background: #202020;
+      border-color: #2a2a2a;
+    }
+    
+    .style-btn {
+      width: 48px;
+      font-size: 10px;
+      color: var(--muted);
+    }
+    
     /* Bottom toolbar for symbols (3 rows) */
     .toolbar {
       position: fixed; left: 0; right: 0; bottom: 0; height: var(--toolbar-h);
       border-top: 1px solid #161616;
       background: linear-gradient(0deg, rgba(0,0,0,.45), rgba(0,0,0,0));
-      padding: 8px 10px calc(8px + env(safe-area-inset-bottom)) 120px;
+      padding: 8px 10px calc(8px + env(safe-area-inset-bottom)) 280px; /* more left padding for arrow strip */
       display: grid;
       grid-template-rows: repeat(3, 28px);
       grid-auto-flow: column;
@@ -398,9 +434,35 @@
   <div class="glyph-menu">
     <button id="glyphToggle" class="glyph-toggle">Glyphs ▲</button>
     <div id="glyphPanel" class="glyph-panel" aria-hidden="true">
-      <div id="categoryGrid" class="category-grid"></div>
-      <div style="font-size: 11px; color: var(--muted); text-align: center; margin-top: 8px;">Select a category to load glyphs</div>
+      <div class="panel-tabs" style="display: flex; margin-bottom: 12px; border-bottom: 1px solid #333;">
+        <button id="categoriesTab" class="panel-tab active" style="flex: 1; padding: 8px; background: none; border: none; color: var(--fg); cursor: pointer; border-bottom: 2px solid var(--accent);">Categories</button>
+        <button id="favoritesTab" class="panel-tab" style="flex: 1; padding: 8px; background: none; border: none; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent;">Favorites</button>
+      </div>
+      
+      <div id="categoriesView">
+        <div class="search-section">
+          <input type="text" id="glyphSearch" placeholder="Search symbols... (alpha, integral, arrow right)" 
+                 style="width: 100%; padding: 8px; background: #0f0f0f; border: 1px solid #333; border-radius: 6px; color: var(--fg); font: 12px var(--font); margin-bottom: 12px;">
+        </div>
+        <div id="searchResults" style="display: none; max-height: 200px; overflow-y: auto; margin-bottom: 12px;"></div>
+        <div id="categoryGrid" class="category-grid"></div>
+        <div style="font-size: 11px; color: var(--muted); text-align: center; margin-top: 8px;">Select a category to load glyphs</div>
+      </div>
+      
+      <div id="favoritesView" style="display: none;">
+        <div id="favoritesList" style="max-height: 200px; overflow-y: auto;"></div>
+        <div style="font-size: 11px; color: var(--muted); text-align: center; margin-top: 8px;">Alt/Option-click any glyph to add to favorites</div>
+      </div>
     </div>
+  </div>
+  
+  <!-- Always-on arrow strip -->
+  <div class="arrow-strip">
+    <button class="arrow-btn" data-arrow="←" title="Insert left arrow">←</button>
+    <button class="arrow-btn" data-arrow="↑" title="Insert up arrow">↑</button>
+    <button class="arrow-btn" data-arrow="↓" title="Insert down arrow">↓</button>
+    <button class="arrow-btn" data-arrow="→" title="Insert right arrow">→</button>
+    <button class="arrow-btn style-btn" id="arrowStyle" title="Cycle arrow styles">Thin</button>
   </div>
 
   <div class="hint">Enter → commit • Shift+Enter → newline • <kbd>Esc</kbd> → clear</div>
@@ -426,7 +488,10 @@
         'Chemistry': ['→','⇌','⇋','⇄','⇅','⇆','⟶','⟷','↑','↓','Å','°','•','⟨','⟩'],
         'Arrows': ['→','←','↑','↓','↔','↕','⇒','⇐','⇑','⇓','⇔','⟶','⟵','⟷'],
         'Currency': ['$','€','£','¥','₩','₹','₽','₺','₫','₴','₦','₪','₱','₿'],
-        'Symbols': ['☀','☁','★','☆','☎','☑','☒','♠','♣','♥','♦','♪','♫','♬']
+        'Symbols': ['☀','☁','★','☆','☎','☑','☒','♠','♣','♥','♦','♪','♫','♬'],
+        'Emoji': [],
+        'Alchemical': [],
+        'Ancient': []
       };
       let currentCategory = 'Greek';
 
@@ -774,11 +839,325 @@
           b.className = 'sym';
           b.type = 'button';
           b.textContent = s;
-          b.title = `Insert ${s}`;
-          b.addEventListener('click', () => insertAtCaret(getActiveEditable(), s));
+          b.title = `Insert ${s} (Alt-click to favorite)`;
+          b.addEventListener('click', (e) => {
+            if (e.altKey || e.metaKey) {
+              e.preventDefault();
+              toggleFavorite(s, s);
+              // Visual feedback
+              b.style.borderColor = favorites.some(fav => fav.symbol === s) ? '#555' : '#1e1e1e';
+            } else {
+              insertAtCaret(getActiveEditable(), s);
+            }
+          });
           toolbar.appendChild(b);
         });
       }
+      
+      // Arrow strip functionality
+      const arrowStyles = [
+        { name: 'Thin', arrows: ['←', '↑', '↓', '→'] },
+        { name: 'Double', arrows: ['⇐', '⇑', '⇓', '⇒'] },
+        { name: 'Long', arrows: ['⟵', '⟶', '⟶', '⟶'] },
+        { name: 'Bold', arrows: ['⬅', '⬆', '⬇', '➡'] }
+      ];
+      
+      let currentArrowStyle = parseInt(localStorage.getItem('arrowStyle') || '0');
+      
+      function updateArrowStrip() {
+        const style = arrowStyles[currentArrowStyle];
+        const arrowBtns = document.querySelectorAll('.arrow-btn[data-arrow]');
+        const arrows = style.arrows;
+        
+        arrowBtns[0].textContent = arrows[0]; // left
+        arrowBtns[1].textContent = arrows[1]; // up
+        arrowBtns[2].textContent = arrows[2]; // down
+        arrowBtns[3].textContent = arrows[3]; // right
+        
+        document.getElementById('arrowStyle').textContent = style.name;
+      }
+      
+      // Arrow insertion with thin spaces
+      function insertArrow(arrow) {
+        const thinSpace = '\u2009';
+        const arrowWithSpaces = thinSpace + arrow + thinSpace;
+        insertAtCaret(getActiveEditable(), arrowWithSpaces);
+      }
+      
+      // Arrow strip event listeners
+      document.querySelectorAll('.arrow-btn[data-arrow]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          insertArrow(btn.textContent);
+        });
+      });
+      
+      document.getElementById('arrowStyle').addEventListener('click', () => {
+        currentArrowStyle = (currentArrowStyle + 1) % arrowStyles.length;
+        localStorage.setItem('arrowStyle', currentArrowStyle.toString());
+        updateArrowStrip();
+      });
+      
+      updateArrowStrip();
+      
+      // Smart text expansions
+      const textExpansions = {
+        '->': '→',   // right arrow
+        '<-': '←',   // left arrow
+        '<->': '↔',  // left-right arrow
+        '=>': '⇒',   // double right arrow (implies)
+        '<=': '⇐',   // double left arrow
+        '<=>': '⇔',  // double left-right arrow (iff)
+        '-->': '⟶',  // long right arrow
+        '<--': '⟵',  // long left arrow
+        '=/=': '≠',  // not equal
+        '+-': '±',   // plus-minus
+        '>=': '≥',   // greater than or equal
+        '<=': '≤',   // less than or equal (conflicts with arrow, arrows take priority)
+        '~=': '≈'    // approximately equal
+      };
+      
+      function performSmartExpansion(editor) {
+        const selection = window.getSelection();
+        if (!selection.rangeCount) return false;
+        
+        const range = selection.getRangeAt(0);
+        const textNode = range.startContainer;
+        
+        if (textNode.nodeType !== Node.TEXT_NODE) return false;
+        
+        const text = textNode.textContent;
+        const cursorPos = range.startOffset;
+        
+        // Look for expansion patterns before cursor
+        for (const [pattern, replacement] of Object.entries(textExpansions)) {
+          const patternStart = cursorPos - pattern.length;
+          if (patternStart >= 0) {
+            const precedingText = text.substring(patternStart, cursorPos);
+            if (precedingText === pattern) {
+              // Check if it's at word boundary (start of text or after space/punctuation)
+              const beforePattern = patternStart > 0 ? text[patternStart - 1] : ' ';
+              if (/\s|^|[.,!?;:]/.test(beforePattern)) {
+                // Replace with thin-spaced arrow
+                const thinSpace = '\u2009';
+                const replacementText = thinSpace + replacement + thinSpace;
+                
+                range.setStart(textNode, patternStart);
+                range.setEnd(textNode, cursorPos);
+                range.deleteContents();
+                range.insertNode(document.createTextNode(replacementText));
+                
+                // Move cursor after the replacement
+                range.setStartAfter(range.endContainer);
+                range.collapse(true);
+                selection.removeAllRanges();
+                selection.addRange(range);
+                
+                return true;
+              }
+            }
+          }
+        }
+        return false;
+      }
+      
+      // Smart expansion trigger on space and Enter
+      editor.addEventListener('keydown', (e) => {
+        if (e.key === ' ' || e.key === 'Enter') {
+          // Small delay to let the character be inserted first
+          setTimeout(() => {
+            if (e.key === ' ') {
+              performSmartExpansion(editor);
+            }
+          }, 0);
+        }
+        // For Enter, check before the newline
+        if (e.key === 'Enter' && !e.shiftKey) {
+          performSmartExpansion(editor);
+        }
+      });
+      
+      // Search functionality with aliases
+      const glyphAliases = {
+        // Greek letters
+        'alpha': 'α', 'beta': 'β', 'gamma': 'γ', 'delta': 'δ', 'epsilon': 'ε',
+        'zeta': 'ζ', 'eta': 'η', 'theta': 'θ', 'iota': 'ι', 'kappa': 'κ',
+        'lambda': 'λ', 'mu': 'μ', 'nu': 'ν', 'xi': 'ξ', 'omicron': 'ο',
+        'pi': 'π', 'rho': 'ρ', 'sigma': 'σ', 'tau': 'τ', 'upsilon': 'υ',
+        'phi': 'φ', 'chi': 'χ', 'psi': 'ψ', 'omega': 'ω',
+        
+        // Math symbols
+        'integral': '∫', 'double integral': '∬', 'triple integral': '∭',
+        'sum': '∑', 'product': '∏', 'sqrt': '√', 'cbrt': '∛',
+        'proportional': '∝', 'infinity': '∞', 'approx': '≈', 'not equal': '≠',
+        'less equal': '≤', 'greater equal': '≥', 'plus minus': '±', 'minus plus': '∓',
+        'perpendicular': '⊥', 'parallel': '∥', 'angle': '∠', 'nabla': '∇',
+        'partial': '∂', 'hbar': 'ℏ', 'ohm': 'Ω', 'degree': '°',
+        
+        // Arrows
+        'arrow left': '←', 'arrow up': '↑', 'arrow right': '→', 'arrow down': '↓',
+        'left arrow': '←', 'up arrow': '↑', 'right arrow': '→', 'down arrow': '↓',
+        'implies': '⇒', 'double arrow right': '⇒', 'iff': '⇔', 'double arrow left': '⇐',
+        'long right': '⟶', 'long left': '⟵', 'two way': '↔', 'reversible': '⇌',
+        
+        // Chemistry
+        'equilibrium': '⇌', 'precipitate': '↓', 'gas': '↑', 'angstrom': 'Å',
+        'bullet': '•', 'middle dot': '·',
+        
+        // Currency
+        'bitcoin': '₿', 'euro': '€', 'yen': '¥', 'pound': '£',
+        'dollar': '$', 'cent': '¢', 'shekel': '₪', 'rupee': '₹'
+      };
+      
+      function performSearch(query) {
+        if (!query.trim()) return [];
+        
+        const results = [];
+        const lowerQuery = query.toLowerCase();
+        
+        // Search aliases
+        for (const [alias, symbol] of Object.entries(glyphAliases)) {
+          if (alias.includes(lowerQuery)) {
+            results.push({ symbol, name: alias, type: 'alias' });
+          }
+        }
+        
+        // Direct character search (if query is a single character)
+        if (query.length === 1) {
+          results.push({ symbol: query, name: `Character: ${query}`, type: 'direct' });
+        }
+        
+        // Limit results for performance
+        return results.slice(0, 50);
+      }
+      
+      function renderSearchResults(results) {
+        const container = document.getElementById('searchResults');
+        const categoryGrid = document.getElementById('categoryGrid');
+        
+        if (results.length === 0) {
+          container.style.display = 'none';
+          categoryGrid.style.display = 'grid';
+          return;
+        }
+        
+        container.style.display = 'block';
+        categoryGrid.style.display = 'none';
+        
+        container.innerHTML = '';
+        
+        results.forEach(result => {
+          const btn = document.createElement('button');
+          btn.className = 'sym';
+          btn.textContent = result.symbol;
+          btn.title = `Insert ${result.name} (${result.symbol})`;
+          btn.style.margin = '2px';
+          btn.addEventListener('click', (e) => {
+            if (e.altKey || e.metaKey) {
+              e.preventDefault();
+              toggleFavorite(result.symbol, result.name);
+              // Visual feedback
+              btn.style.borderColor = favorites.some(fav => fav.symbol === result.symbol) ? '#555' : '#1e1e1e';
+            } else {
+              insertAtCaret(getActiveEditable(), result.symbol);
+              glyphPanel.classList.remove('open');
+              glyphToggle.textContent = 'Glyphs ▲';
+            }
+          });
+          container.appendChild(btn);
+        });
+      }
+      
+      // Search input event listener
+      const searchInput = document.getElementById('glyphSearch');
+      searchInput.addEventListener('input', (e) => {
+        const results = performSearch(e.target.value);
+        renderSearchResults(results);
+      });
+      
+      // Clear search when panel closes
+      const clearSearch = () => {
+        searchInput.value = '';
+        renderSearchResults([]);
+      };
+      
+      // Favorites system
+      let favorites = JSON.parse(localStorage.getItem('glyphFavorites') || '[]');
+      
+      function saveFavorites() {
+        localStorage.setItem('glyphFavorites', JSON.stringify(favorites));
+      }
+      
+      function toggleFavorite(symbol, name = '') {
+        const index = favorites.findIndex(fav => fav.symbol === symbol);
+        if (index >= 0) {
+          favorites.splice(index, 1);
+        } else {
+          favorites.push({ symbol, name: name || symbol });
+        }
+        saveFavorites();
+        if (document.getElementById('favoritesView').style.display !== 'none') {
+          renderFavorites();
+        }
+      }
+      
+      function renderFavorites() {
+        const container = document.getElementById('favoritesList');
+        container.innerHTML = '';
+        
+        if (favorites.length === 0) {
+          container.innerHTML = '<div style="color: var(--muted); text-align: center; padding: 20px;">No favorites yet. Alt-click any glyph to add it!</div>';
+          return;
+        }
+        
+        favorites.forEach(fav => {
+          const btn = document.createElement('button');
+          btn.className = 'sym';
+          btn.textContent = fav.symbol;
+          btn.title = `${fav.name} (Alt-click to remove)`;
+          btn.style.margin = '2px';
+          btn.style.position = 'relative';
+          
+          // Add favorite indicator
+          btn.style.borderColor = '#444';
+          
+          btn.addEventListener('click', (e) => {
+            if (e.altKey || e.metaKey) {
+              e.preventDefault();
+              toggleFavorite(fav.symbol);
+            } else {
+              insertAtCaret(getActiveEditable(), fav.symbol);
+              glyphPanel.classList.remove('open');
+              glyphToggle.textContent = 'Glyphs ▲';
+            }
+          });
+          
+          container.appendChild(btn);
+        });
+      }
+      
+      // Tab switching
+      document.getElementById('categoriesTab').addEventListener('click', () => {
+        document.getElementById('categoriesView').style.display = 'block';
+        document.getElementById('favoritesView').style.display = 'none';
+        document.getElementById('categoriesTab').className = 'panel-tab active';
+        document.getElementById('categoriesTab').style.color = 'var(--fg)';
+        document.getElementById('categoriesTab').style.borderBottomColor = 'var(--accent)';
+        document.getElementById('favoritesTab').className = 'panel-tab';
+        document.getElementById('favoritesTab').style.color = 'var(--muted)';
+        document.getElementById('favoritesTab').style.borderBottomColor = 'transparent';
+      });
+      
+      document.getElementById('favoritesTab').addEventListener('click', () => {
+        document.getElementById('categoriesView').style.display = 'none';
+        document.getElementById('favoritesView').style.display = 'block';
+        document.getElementById('favoritesTab').className = 'panel-tab active';
+        document.getElementById('favoritesTab').style.color = 'var(--fg)';
+        document.getElementById('favoritesTab').style.borderBottomColor = 'var(--accent)';
+        document.getElementById('categoriesTab').className = 'panel-tab';
+        document.getElementById('categoriesTab').style.color = 'var(--muted)';
+        document.getElementById('categoriesTab').style.borderBottomColor = 'transparent';
+        renderFavorites();
+      });
       
       // Glyph panel toggle
       if (glyphToggle && glyphPanel) {
@@ -786,7 +1165,9 @@
           const open = glyphPanel.classList.toggle('open');
           glyphPanel.setAttribute('aria-hidden', open ? 'false' : 'true');
           glyphToggle.textContent = open ? 'Glyphs ▼' : 'Glyphs ▲';
+          if (!open) clearSearch(); // Clear search when closing
         });
+        // This is handled above now
         
         // Close panel when clicking outside
         document.addEventListener('click', (e) => {
@@ -825,6 +1206,51 @@
           }
         }
       });
+      
+      // Load expanded Unicode categories
+      function loadEmojiCategory() {
+        categories['Emoji'] = [
+          // Smileys
+          '😀','😃','😄','😁','😅','😂','🤣','😊','😇','🙂','🙃','😉','😌','😍','🥰','😘','😗','😙','😚','😋','😛','😝','😜','🤪','🤨','🧐','🤓','😎','🥸','🤩','🥳',
+          // Gestures
+          '👍','👎','👏','🙌','👐','🤲','🤝','🙏','✍','👋','🤚','🖐','✋','🖖','👌','✌','🤘','🤙','👈','👉','👆','👇','☝',
+          // Nature
+          '🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐸','🐵','🙈','🙉','🙊','🐒','🐔','🐧',
+          // Hearts & Symbols
+          '❤','💙','💚','💛','🧡','💜','🖤','🤍','🤎','💔','❣','💕','💞','💓','💗','💖','💘','💝','💟',
+          // Weather
+          '☀','🌤','⛅','🌦','🌧','⛈','🌩','🌨','❄','☃','⛄','🌪','🌈','🌙','⭐','🌟','💫','✨','☄','🌍','🌎','🌏'
+        ];
+      }
+      
+      function loadAlchemicalCategory() {
+        categories['Alchemical'] = [
+          // Classical elements
+          '🜀','🜁','🜂','🜃','🜄','🜅','🜆','🜇','🜈','🜉','🜊','🜋','🜌','🜍','🜎','🜏',
+          // Metals
+          '🜐','🜑','🜒','🜓','🜔','🜕','🜖','🜗','🜘','🜙','🜚','🜛','🜜','🜝','🜞','🜟',
+          // Compounds
+          '🜠','🜡','🜢','🜣','🜤','🜥','🜦','🜧','🜨','🜩','🜪','🜫','🜬','🜭','🜮','🜯',
+          // Processes
+          '🜰','🜱','🜲','🜳','🜴','🜵','🜶','🜷','🜸','🜹','🜺','🜻','🜼','🜽','🜾','🜿'
+        ];
+      }
+      
+      function loadAncientCategory() {
+        categories['Ancient'] = [
+          // Ancient symbols
+          '⚚','⚛','⚜','⚝','⚞','⚟','⚠','⚡','⚢','⚣','⚤','⚥','⚦','⚧','⚨','⚩','⚪','⚫',
+          // Misc ancient symbols
+          '☤','☥','☧','☨','☩','☪','☫','☬','☭','☮','☯','☰','☱','☲','☳','☴','☵','☶','☷','♆','♇',
+          // Additional esoteric symbols
+          '⚕','⚖','⚗','⚘','⚙','⚰','⚱','⚲','⚳','⚴','⚵','⚶','⚷','⚸','⚹','⚺','⚻','⚼','⚽','⚾','⚿'
+        ];
+      }
+      
+      // Load all extended categories
+      loadEmojiCategory();
+      loadAlchemicalCategory();
+      loadAncientCategory();
       
       renderCategoryButtons();
       renderToolbar();

@@ -1,0 +1,232 @@
+Glyph & Symbols Library — Expansion Spec
+0) Goals
+
+Make symbol entry fast (one tap) and discoverable (search + categories).
+
+Keep UI lightweight (lazy load, paging, no jank).
+
+Cover the core domains you use (Greek, math/chem/geometry/operators/currency), plus emoji and select historical/scientific sets.
+
+Provide an always-available arrow strip for composing sequences inline.
+
+1) UI Layout & Behavior
+1.1 Always-on Arrow Strip (D-pad)
+
+Placement: Docked at the bottom-left, directly to the right of the “Glyphs ▾” button and before the first row of category glyphs.
+
+Buttons: ← ↑ ↓ → + a “Style” button to cycle styles (Thin → Double → Long → Chevron → Bold).
+
+Insertion: Inserts the chosen arrow at the caret with thin spaces (U+2009) on either side for beautiful prose.
+
+Persistence: Remember last chosen arrow style (localStorage).
+
+Keyboard option (optional): Shift+Arrow keys insert corresponding arrows (do not block normal arrow navigation without Shift).
+
+1.2 Category Panel (Slide-out)
+
+Left slide-out shows Categories + Search + Favorites.
+
+Category click repopulates the 3-row toolbar under the editor (lazy, paged).
+
+Favorites tab shows pinned glyphs (Alt/Option-click to pin/unpin).
+
+Search understands names/aliases (“integral”, “lambda”, “arrow right”) and direct characters.
+
+1.3 Toolbar (3 Rows)
+
+First 2 slots: Superscript + Subscript actions (wrap selection with <sup> / <sub>; if no selection, insert unicode hints).
+
+Next ~8–12 fixed slots: Pinned Arrow Set (mirrors arrow strip for redundancy).
+
+Remaining slots: current category glyphs (paged “More…” button).
+
+1.4 Smart Text Expansions (Editor)
+
+Auto-convert common sequences at word boundaries (space/Enter/punctuation):
+
+-> → →, <- → ←, <-> → ↔, => → ⇒, <= → ⇐, <=> → ⇔, --> → ⟶, <-- → ⟵
+
+Optional shortcodes (space-prefixed) for rare glyphs you use often:
+
+:leo: → ♌, :salt: → 🝫, :hedera: → 𐇥, :man: → 𓀬
+
+Surround inserted arrows with thin spaces.
+
+2) Categories & Unicode Coverage
+
+Load ranges lazily and page large blocks. Hide unsupported glyphs (see §4 Performance).
+
+Core (existing)
+
+Greek — U+0370–U+03FF (Greek & Coptic)
+
+Math (rename to Math Operators & Symbols) — multiple:
+
+Mathematical Operators U+2200–U+22FF
+
+Supplemental Mathematical Operators U+2A00–U+2AFF
+
+Misc Math Symbols-A U+27C0–U+27EF
+
+Misc Math Symbols-B U+2980–U+29FF
+
+(Optional, heavy) Mathematical Alphanumeric Symbols U+1D400–U+1D7FF — enable as a separate “Math Alphanumerics” category, paged only.
+
+Chemistry (curated set)
+
+Reaction arrows (→, ⇌, ⟶, ⟷, etc.), up/down (↑, ↓), middle dot •, °, Å, angle brackets ⟨ ⟩, common ionic superscripts/subscripts.
+
+Currency — U+20A0–U+20CF plus Bitcoin ₿, etc.
+
+Operators (curated)
+
+±, ×, ÷, ∙, ≈, ≠, ≤, ≥, ≡, ∝, ∴, ∵, ∥, ⊥, ≅, ≃, ∓, ∂ … (keep handy).
+
+Geometry (curated)
+
+∠, ⊾, ⟂, ∥, ⊙, ⊕, ⊗, ⊡, △, ▭, ◻, ◯, ∘, etc.
+
+Arrows — keep as a category but also pin a fixed subset in the toolbar
+
+Arrows U+2190–U+21FF
+
+Supplemental Arrows-A U+27F0–U+27FF
+
+Supplemental Arrows-B U+2900–U+297F
+
+Misc Symbols and Arrows U+2B00–U+2BFF (selects)
+
+Symbols (rename to Symbols & Shapes; split for clarity)
+
+Misc Symbols U+2600–U+26FF (☀ ★ ☯, etc.)
+
+Geometric Shapes U+25A0–U+25FF
+
+Dingbats U+2700–U+27BF
+
+Box Drawing U+2500–U+257F
+
+Block Elements U+2580–U+259F
+
+Letterlike Symbols U+2100–U+214F (ℏ, Ω variants)
+
+New (add)
+
+Emoji (curated, fast-loading)
+
+Emoticons U+1F600–U+1F64F
+
+Plus curated picks from:
+
+Misc Symbols & Pictographs U+1F300–U+1F5FF
+
+Transport & Map U+1F680–U+1F6FF
+
+Supplemental Symbols & Pictographs U+1F900–U+1F9FF
+
+Symbols & Pictographs Extended-A U+1FA70–U+1FAFF
+
+Use a curated subset by default to avoid tofu and overload; allow paging to reveal more.
+
+Superscripts/Subscripts — U+2070–U+209F
+
+Alchemical Symbols — U+1F700–U+1F77F (matches your vibe)
+
+Ancient/Esoteric (curated)
+
+Ancient Symbols U+10190–U+101CF
+
+Egyptian Hieroglyphs U+13000–U+1342F — curated only (e.g., include 𓀬 and a few favorites), do not load full block by default (very large).
+
+Aegean Numbers / Ancient Greek Numbers (optional, curated)
+
+Keep each range under ~4–5k codepoints per load; page results (e.g., 180 per page) and “More…” button.
+
+3) Search & Aliases
+3.1 Plain-language aliases (examples; expand over time)
+
+Greek: alpha→α, beta→β, gamma→γ, delta→δ, lambda→λ, omega→ω, pi→π, theta→θ, sigma→σ, phi→φ, psi→ψ, mu→μ.
+
+Math: integral→∫, double integral→∬, triple integral→∭, sum→∑, product→∏, sqrt→√, proportional→∝, approx→≈, not equal→≠, perpend→⊥, parallel→∥, angle→∠, nabla→∇, hbar→ℏ, ohm→Ω, degree→°.
+
+Arrows: arrow right→→, arrow left→←, arrow up→↑, arrow down→↓, implies→⇒, iff→⇔, long right→⟶, long left→⟵, two way→↔, chevron right→⭢.
+
+Chemistry: reversible→⇌, equilibrium→⇌, precipitate→↓, gas→↑, angstrom→Å, bullet→•.
+
+Currency: bitcoin→₿, euro→€, yen→¥, pound→£, shekel→₪, rupee→₹.
+
+Esoteric/emoji shortcodes you care about: leo→♌, salt→🝫, hedera→𐇥, man→𓀬.
+
+3.2 Matching rules
+
+Case-insensitive substring match on alias keys.
+
+Include direct char search (paste → finds →).
+
+Cap search results (e.g., first 500) for snappy UI.
+
+4) Performance & Quality
+
+Lazy load all Unicode ranges; page output (e.g., 180 per page).
+
+Tofu filter: don’t show glyphs that render as empty boxes. (Measure rendered width vs. a □ baseline; hide if identical.)
+
+Font fallbacks: ensure .sym buttons and inserted text use a stack with symbol/emoji coverage (e.g., Noto Emoji / Segoe UI Emoji / Apple Symbols as fallbacks).
+
+Persistence: Favorites, last category, last arrow style to localStorage.
+
+No blocking on huge blocks (Hieroglyphs, Math Alphanumerics): always paged; default to curated subsets.
+
+5) Accessibility & Aesthetics
+
+Buttons: 40×32 px minimum touch targets on mobile; clear focus ring.
+
+ARIA: arrow strip labeled “Quick arrows”; glyph buttons include aria-label="Insert <name or code point>".
+
+Reduced motion: honor prefers-reduced-motion (disable appear animations).
+
+Contrast: symbols readable in both light/dark themes.
+
+Thin-space option: Setting to toggle thin-spaces around arrows on/off.
+
+6) Acceptance Criteria (QA)
+
+Arrow strip is always visible; changing style persists; arrows insert with thin spaces.
+
+Categories load fast; large blocks page with “More…”.
+
+Search finds aliases and direct glyphs; returns within 100ms on typical subsets.
+
+Favorites pin/unpin with Alt/Option-click; appear in a Favorites tab; persist across reloads.
+
+Tofu glyphs do not appear; no blank boxes.
+
+Smart expansions (->, <-, etc.) convert on space/Enter without breaking normal editing.
+
+Sup/Sub buttons wrap current selection or insert unicode hints if no selection.
+
+Emoji render across platforms (fallback fonts cover common emoji).
+
+No console errors; no frame drops when paging.
+
+7) Nice-to-Have (later)
+
+Recents row (last 12 used glyphs).
+
+Per-note favorites (optional).
+
+User alias editor (add custom text→glyph mappings).
+
+Export alias map for documentation.
+
+Notes for the Agent
+
+You already have the centered editor, inline edit, glyph panel and toolbar scaffolding. Keep those intact.
+
+Implement the always-on arrow strip and fixed arrow slots at the front of the toolbar.
+
+Add Emoji and the new curated blocks as categories with lazy loaders, tofu filtering, and paging.
+
+Wire up aliases, search, favorites, and smart expansions exactly as described.
+
+Keep everything responsive and performant.
