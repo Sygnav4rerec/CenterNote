@@ -270,9 +270,9 @@
     .glyph-toggle:hover { opacity: 1; }
     
     .glyph-panel {
-      position: absolute;
-      bottom: 40px;
-      left: 0;
+      position: fixed;
+      bottom: 120px;
+      right: calc(8px + env(safe-area-inset-right));
       width: 280px;
       max-height: 350px;
       background: #0f0f0f;
@@ -282,6 +282,7 @@
       box-shadow: 0 12px 30px rgba(0,0,0,0.55);
       display: none;
       overflow-y: auto;
+      z-index: 20;
     }
     .glyph-panel.open { display: block; }
     
@@ -558,7 +559,7 @@
     <div class="toolbar" id="toolbar" aria-label="Symbols toolbar"></div>
   </main>
 
-  <div class="glyph-menu" style="display: none;">
+  <div class="glyph-menu">
     <div id="glyphPanel" class="glyph-panel" aria-hidden="true">
       <div class="panel-tabs" style="display: flex; margin-bottom: 12px; border-bottom: 1px solid #333;">
         <button id="categoriesTab" class="panel-tab active" style="flex: 1; padding: 8px; background: none; border: none; color: var(--fg); cursor: pointer; border-bottom: 2px solid var(--accent);">Categories</button>
