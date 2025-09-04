@@ -1,0 +1,94 @@
+Got it—I see the layout you’re aiming for. There’s a tiny spatial gotcha in your wording (“bottom right… then to the right…” would go off-screen), so here’s a clean, unambiguous spec that keeps everything anchored to the bottom-right and expands leftward, exactly as you described in spirit.
+
+Bottom-Right Docked Controls (spec)
+Placement & order (right → left)
+
+From the far bottom-right edge inward:
+
+Glyph Menu Box (“Glyphs ▾”)
+
+Fixed square box (same height/width as arrow pad).
+
+Click opens the category slide-out above it (not covering the editor).
+
+Arrow Pad Box (2×2 arrows)
+
+Same square size as the menu box for visual rhythm.
+
+2×2: ← | ↑ on first row, ↓ | → on second row (or your preferred arrangement).
+
+Style selector (Thin / Double / Long / Chevron / Bold) sits directly under this square as a small, full-width pill.
+
+Inserts arrows with thin spaces (U+2009) by default; toggle available in Menu.
+
+Glyph Toolbar (3 rows)
+
+Begins immediately to the left of the arrow pad.
+
+First two slots: Superscript / Subscript actions.
+
+Next 8–12 slots: fixed arrows row (mirrors pad for redundancy).
+
+Remaining cells: current category glyphs (paged with “More…”).
+
+Extends leftward and scrolls horizontally if needed; never crosses the arrow/menu boxes.
+
+Visual sketch (bottom edge)
+┌──────────────────────────── Glyph toolbar (extends left) ────────────────────────────┐  ⟵ left
+│ [sup] [sub] [←][↑][↓][→] [ … category glyphs … ] [More…]                            │
+└──────────────────────────────────────────────────────────────────────────────────────┘
+                          ┌───────────┐  ┌───────────┐
+                          │ Glyphs ▾  │  │ ←  ↑ │    │   ← Arrow pad (2×2)
+                          └───────────┘  │ ↓  → │    │
+                                         └───────────┘
+                                         [ style ▼ ]     ← style pill, full width
+                                                         (Bottom-right corner of screen)
+                                                                                  ⟶ right
+
+Behavior details
+
+Docking & flow: All three elements are fixed to the bottom-right; the toolbar grows leftward so it never pushes UI off-screen on small viewports.
+
+Safe area: Respect safe-area-inset-bottom/right so nothing hugs the notch/gesture zone.
+
+Pointer/Touch: Minimum 40×40px targets on mobile; visible focus rings for keyboard.
+
+Z-order: Arrow/menu boxes above the toolbar; category slide-out opens upward from the glyph menu box.
+
+No overlap with editor: Keep your center-gap spacer logic; these controls sit below the typing horizon, not on top of it.
+
+Responsive rules
+
+Narrow screens (<520px):
+
+Keep order the same; if space is tight, allow the toolbar to collapse to 2 rows with horizontal scroll, but do not shrink the menu/arrow squares (tap targets > comfort).
+
+Wide screens:
+
+Toolbar can show all symbols without horizontal scroll; arrow pad and menu stay pinned at the corner.
+
+Interactions & defaults
+
+Arrow pad: 2×2 arrows insert at caret; style pill cycles styles and persists (localStorage).
+
+Toolbar fixed arrows: show the same style as the pad’s current style for consistency.
+
+Sup/Sub: wrap selection; with no selection, insert superscript/subscript “hint” glyphs.
+
+Smart expansions: still active in the editor (-> → →, etc.) and respect the thin-space toggle.
+
+Favorites & search: Unchanged—live in the slide-out; Alt/Option-click pins; Favorites tab persists.
+
+Acceptance criteria (QA)
+
+Spatial: Bottom-right shows [Glyphs box][Arrow pad+style][Toolbar left] in that order; toolbar grows only leftward.
+
+Tap size: Menu and arrow pad squares are the same size and comfortable to tap.
+
+No overlap: The last submitted line remains at the configured center gap from the editor; controls never obscure text.
+
+Consistency: Changing arrow style updates both the pad and the fixed arrows in the toolbar.
+
+Slide-out: Category panel opens above the menu box without covering the caret; keyboard/esc closes.
+
+Responsiveness: Works on narrow screens—no controls clip off-screen; toolbar scrolls if needed.

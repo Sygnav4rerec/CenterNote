@@ -309,29 +309,41 @@
       font-size: 9px;
     }
 
-    /* Bottom toolbar controls - left to right layout */
-    .toolbar-controls {
+    /* Bottom-right docked controls */
+    .bottom-right-controls {
       position: fixed;
-      bottom: 8px;
-      left: 8px;
+      bottom: calc(8px + env(safe-area-inset-bottom));
+      right: calc(8px + env(safe-area-inset-right));
       display: flex;
       gap: 8px;
       z-index: 15;
       align-items: flex-end;
     }
     
-    /* Glyph toggle box */
-    .glyph-toggle-box {
+    /* Glyph menu box (far right, square) */
+    .glyph-menu-box {
       background: rgba(19, 19, 19, 0.95);
       backdrop-filter: blur(8px);
       border: 1px solid #2a2a2a;
       border-radius: 12px;
       padding: 8px;
       box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+      width: 84px;
+      height: 84px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     
-    /* Arrow control box - 2x2 + style */
-    .arrow-box {
+    /* Arrow pad container */
+    .arrow-pad-container {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    
+    /* Arrow pad box - 2x2 square */
+    .arrow-pad {
       background: rgba(19, 19, 19, 0.95);
       backdrop-filter: blur(8px);
       border: 1px solid #2a2a2a;
@@ -340,9 +352,30 @@
       box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
       display: grid;
       grid-template-columns: 1fr 1fr;
-      grid-template-rows: auto auto auto;
+      grid-template-rows: 1fr 1fr;
       gap: 3px;
       width: 84px;
+      height: 84px;
+    }
+    
+    /* Style selector pill */
+    .style-pill {
+      width: 84px;
+      height: 24px;
+      background: rgba(19, 19, 19, 0.95);
+      backdrop-filter: blur(8px);
+      border: 1px solid #2a2a2a;
+      border-radius: 12px;
+      padding: 0;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+      color: var(--muted);
+      font: 600 9px/1 var(--font);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    
+    .style-pill:hover {
+      background: rgba(26, 26, 26, 0.95);
     }
     
     .arrow-btn {
@@ -365,6 +398,28 @@
       border-color: #2a2a2a;
       transform: translateY(-1px);
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+    
+    /* Glyph toggle button styling */
+    .glyph-toggle {
+      width: 68px;
+      height: 68px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--fg);
+      font: 500 10px/1.2 var(--font);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+    
+    .glyph-toggle:hover {
+      background: var(--subtle);
+      border-color: var(--muted);
     }
     
     .style-btn {
@@ -398,12 +453,16 @@
       grid-row: 2;
     }
     
-    /* Bottom toolbar for symbols (3 rows) */
+    /* Glyph toolbar - extends leftward from arrow pad */
     .toolbar {
-      position: fixed; left: 0; right: 0; bottom: 0; height: var(--toolbar-h);
+      position: fixed; 
+      left: 0; 
+      right: 200px; /* leaves space for arrow pad + glyph menu */
+      bottom: 0; 
+      height: var(--toolbar-h);
       border-top: 1px solid #161616;
       background: linear-gradient(0deg, rgba(0,0,0,.45), rgba(0,0,0,0));
-      padding: 8px 10px calc(8px + env(safe-area-inset-bottom)) 20px;
+      padding: 8px calc(8px + env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) 10px;
       display: grid;
       grid-template-rows: repeat(3, 28px);
       grid-auto-flow: column;
@@ -411,6 +470,21 @@
       gap: 6px 8px;
       overflow-x: auto;
       align-content: center;
+      justify-content: end; /* align to the right */
+    }
+    
+    /* Special styling for sup/sub and fixed arrow buttons */
+    .toolbar .sup-sub {
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      color: var(--accent);
+      font: 600 10px/1 var(--font);
+    }
+    
+    .toolbar .fixed-arrow {
+      background: #161616;
+      border: 1px solid #222;
+      opacity: 0.8;
     }
     .sym { 
       display: inline-flex; align-items: center; justify-content: center;
@@ -436,7 +510,7 @@
     /* Screenshot mode - hide chrome (press P) */
     body.screenshot-mode .topbar,
     body.screenshot-mode .toolbar,
-    body.screenshot-mode .glyph-toggle,
+    body.screenshot-mode .bottom-right-controls,
     body.screenshot-mode .glyph-panel {
       display: none !important;
     }
@@ -508,20 +582,24 @@
     </div>
   </div>
   
-  <!-- Bottom toolbar controls -->
-  <div class="toolbar-controls">
-    <!-- Glyph toggle box -->
-    <div class="glyph-toggle-box">
-      <button id="glyphToggle" class="glyph-toggle" title="Toggle glyph panel">Glyphs ▲</button>
+  <!-- Bottom-right docked controls -->
+  <div class="bottom-right-controls">
+    <!-- Arrow pad container (left) -->
+    <div class="arrow-pad-container">
+      <!-- 2x2 Arrow pad -->
+      <div class="arrow-pad">
+        <button class="arrow-btn" data-arrow="←" title="Insert left arrow">←</button>
+        <button class="arrow-btn" data-arrow="↑" title="Insert up arrow">↑</button>
+        <button class="arrow-btn" data-arrow="↓" title="Insert down arrow">↓</button>
+        <button class="arrow-btn" data-arrow="→" title="Insert right arrow">→</button>
+      </div>
+      <!-- Style selector pill -->
+      <button class="style-pill" id="arrowStyle" title="Cycle arrow styles">Thin</button>
     </div>
     
-    <!-- Arrow control box -->
-    <div class="arrow-box">
-      <button class="arrow-btn" data-arrow="↑" title="Insert up arrow">↑</button>
-      <button class="arrow-btn" data-arrow="→" title="Insert right arrow">→</button>
-      <button class="arrow-btn" data-arrow="←" title="Insert left arrow">←</button>
-      <button class="arrow-btn" data-arrow="↓" title="Insert down arrow">↓</button>
-      <button class="arrow-btn style-btn" id="arrowStyle" title="Cycle arrow styles">Thin</button>
+    <!-- Glyph menu box (far right) -->
+    <div class="glyph-menu-box">
+      <button id="glyphToggle" class="glyph-toggle" title="Toggle glyph panel">Glyphs<br>▾</button>
     </div>
   </div>
 
