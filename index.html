@@ -464,12 +464,12 @@
       border-top: 1px solid #161616;
       border-radius: 12px 12px 0 0; /* rounded top corners */
       background: linear-gradient(0deg, rgba(0,0,0,.65), rgba(0,0,0,0.3));
-      padding: 16px 12px 16px 16px; /* better vertical centering */
+      padding: 12px 12px 12px 16px; /* tighter padding */
       display: grid;
       grid-template-rows: repeat(3, 1fr); /* equal height rows */
       grid-auto-flow: column;
-      grid-auto-columns: minmax(44px, max-content); /* ensure minimum width for scrolling */
-      gap: 12px 10px; /* more vertical breathing room */
+      grid-auto-columns: minmax(36px, max-content); /* smaller minimum width */
+      gap: 4px 6px; /* much tighter spacing between symbols */
       overflow-x: auto;
       overflow-y: hidden;
       align-content: center;
@@ -518,14 +518,13 @@
     }
     .sym { 
       display: inline-flex; align-items: center; justify-content: center;
-      min-width: 44px; height: 36px; /* optimal proportions for the grid */
-      font: 600 18px/1 var(--mono);
+      min-width: 36px; height: 32px; /* more compact size */
+      font: 600 16px/1 var(--mono); /* slightly smaller font */
       color: var(--fg);
       background: #131313; border: 1px solid #1e1e1e;
-      border-radius: 10px; cursor: pointer;
+      border-radius: 8px; cursor: pointer; /* smaller border radius */
       user-select: none;
       flex-shrink: 0; /* prevent symbols from getting squashed during scroll */
-      margin: 2px 0; /* subtle vertical spacing within grid */
     }
     .sym:hover { filter: brightness(1.15); }
 
