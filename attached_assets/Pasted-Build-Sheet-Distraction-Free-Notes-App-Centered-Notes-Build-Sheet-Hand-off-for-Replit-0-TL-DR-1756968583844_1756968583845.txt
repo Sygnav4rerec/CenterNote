@@ -1,0 +1,248 @@
+Build Sheet: Distraction Free Notes App
+
+Centered Notes — Build Sheet (Hand-off for Replit)
+0) TL;DR
+
+A distraction-free notes app with a centered input, history scrolling upward, inline editing, bottom glyph palette (3 rows), dark UI, and local persistence. No left rail; notes/history live on the main canvas with minimal chrome.
+
+1) Product Intent
+
+Why: Remove friction and visual noise during note-taking and meta-cognitive journaling. Keep the cursor in the visual center so typing feels grounded.
+
+Philosophy: Minimal chrome, fast keyboard flow, zero setup.
+
+Audience: Writers, students, thinkers, anyone who wants a calm writing surface.
+
+2) UX Principles
+
+Centered input: Editor stays vertically centered above the bottom glyph toolbar.
+
+Enter to commit: Each Enter saves a line to history and scrolls it up.
+
+Inline edits: Double-click any past line to edit (Enter to save, Esc to cancel).
+
+Lightweight menus: Single top-right menu; no left rail.
+
+Glyphs: Bottom toolbar with common math/chem/logic/emoji symbols (3 rows).
+
+3) Core Features (MVP)
+
+Centered, monospace editor (contenteditable).
+
+History feed above the editor; smooth scroll on commit.
+
+Inline edit of submitted lines (double-click to edit; blur or Enter saves).
+
+Glyph toolbar (3 rows) inserts at caret (editor or inline edit target).
+
+Local persistence via localStorage.
+
+Export .txt of the current session/history.
+
+Font size +/- control.
+
+Help / shortcuts dialog.
+
+Dark theme (built-in).
+
+Keyboard
+
+Enter — commit line
+
+Shift+Enter — newline in editor or while inline-editing
+
+Esc — clear editor / close menu / cancel inline edit
+
+4) Non-Functional
+
+No dependencies. Single index.html.
+
+Responsive; mobile-friendly.
+
+Works offline (no backend required).
+
+Privacy: All data stays in-browser (localStorage).
+
+5) Current File (index.html)
+
+Use the latest canvas file named:
+
+Centered Notes — Minimal Distraction App (index…)
+(That’s the single-file HTML app you already have.)
+
+6) Known Issues to Fix Before Deploy (quick patches)
+
+The current canvas file shows some merge artifacts. Apply these two quick fixes:
+
+A) Fix renderHistory() (remove stray “note” references)
+
+Replace your current renderHistory() with this exact version:
+
+function renderHistory() {
+  historyEl.innerHTML = '';
+  const frag = document.createDocumentFragment();
+  state.lines.forEach((text, idx) => {
+    const div = document.createElement('div');
+    div.className = 'line';
+    div.dataset.index = idx;
+    div.textContent = text;
+    frag.appendChild(div);
+  });
+  historyEl.appendChild(frag);
+  historyEl.scrollTop = historyEl.scrollHeight;
+}
+
+B) Fix inline edit to write back to state.lines
+
+In the enterEdit(el) function, replace the finish(commit) section with:
+
+function finish(commit) {
+  el.removeEventListener('keydown', onKey);
+  el.removeEventListener('blur', onBlur);
+  el.contentEditable = 'false';
+  el.classList.remove('editing');
+  if (commit) {
+    const idx = Number(el.dataset.index);
+    state.lines[idx] = el.textContent;
+    save();
+  } else {
+    renderHistory(); // discard uncommitted HTML
+  }
+}
+
+C) CSS stray braces
+
+At the very end of the <style> block, remove any duplicate }.menu-btn{...} / }.dropdown{...} lines or extra } braces that slipped in. The media block should end cleanly like:
+
+@media (max-width: 520px) {
+  :root { --input-size: 26px; --line-size: 16px; }
+  .menu-btn { padding: 8px 10px; }
+  .dropdown { min-width: 200px; }
+}
+
+7) Deliverables for Replit Agent
+
+Create a new HTML/CSS/JS project.
+
+Paste the corrected index.html (single file).
+
+Run and verify:
+
+Editor is centered; history scrolls up.
+
+Enter commits; Shift+Enter adds newline inside the editor.
+
+Double-click history line → edit → Enter saves / Esc cancels.
+
+Glyph buttons insert at caret (in editor or edited line).
+
+Export .txt works.
+
+localStorage persistence.
+
+8) Nice-to-Have (Post-MVP / Stretch)
+
+These are optional; they can ship incrementally.
+
+A) Glyph Category Slide-out + Sup/Sub (UI is simple)
+
+Trigger: “Glyphs ▾” button (bottom-left, above toolbar).
+
+Panel: Slide-out with categories (Greek, Operators, Algebra/Calc, Geometry, Chemistry, Physics, Arrows, Currency, Misc Symbols, Geometric Shapes, Dingbats, Emoji/AI-ish).
+
+Behavior: Picking a category repopulates the 3-row toolbar.
+
+Sup/Sub: Two small buttons x⁺ and x₋ to wrap selection in <sup> or <sub>; if nothing selected, insert ⁺/₋.
+
+(You already have the full code block from me. Replit can paste the HTML/CSS/JS snippets into the current file when ready.)
+
+B) Multi-note “v2”
+
+＋ New Note (prompt for title).
+
+Notes ▾ dropdown (search, rename, delete).
+
+Per-note localStorage or Supabase sync (see schema below).
+
+C) Find-in-note
+
+Cmd/Ctrl+F: prompt for query → highlight matches (non-destructive).
+
+D) Tags & Markdown
+
+#tags in lines → filter by tag.
+
+Export .md (optional markdown toggle for history).
+
+E) App Store / PWA polish
+
+Add PWA manifest & service worker:
+
+Icons (512/192/180/152/128/64), name/short_name, start_url, theme/background colors.
+
+Simple offline cache for the single-file app.
+
+iOS meta (apple-touch-icon, status bar style).
+
+9) Optional Cloud Sync (Supabase)
+
+Only if you want multi-device sync now. Minimal schema:
+
+create table notes (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  title text not null default 'Untitled',
+  lines text[] not null default '{}',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index on notes (user_id, updated_at desc);
+
+-- RLS (row-level security)
+alter table notes enable row level security;
+create policy "own notes" on notes
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+
+Client pattern:
+
+On load: select notes order by updated_at desc.
+
+On commit/inline edit: update lines and updated_at.
+
+Optimistic UI; debounce network writes.
+
+10) QA Checklist
+
+Typing feels lag-free; caret remains centered.
+
+Commit/scroll: no jitter at different font sizes.
+
+Inline edit preserves lines’ order and updates storage.
+
+Glyph insertion works for:
+
+Editor (no selection & with selection).
+
+Inline-edited lines (no selection & with selection).
+
+Export produces UTF-8 .txt and includes glyphs.
+
+No console errors; no stray CSS braces.
+
+11) Future-proofing Ideas
+
+Searchable glyph palette (Ctrl/Cmd+K → type “integral” → ∫).
+
+Favorites row (pin icon to keep most used glyphs).
+
+Theming (light/dark already; add sepia/high-contrast).
+
+Autosave banner when localStorage or network write fails (rare).
+
+Telemetry (opt-in only): count glyph insertions to surface smart suggestions.
+
+12) One-liner App Store Description (draft)
+
+A serene, centered writing surface. Press Enter to let thoughts rise, edit anything inline, and insert math/chem/logic symbols from a clean glyph palette. No clutter. Just notes, perfectly centered.
