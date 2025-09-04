@@ -351,6 +351,7 @@
 </head>
 <body>
   <div class="topbar" aria-label="Menu">
+    <button id="newNote" class="icon-btn" title="Create new note">➕</button>
     <button id="copyText" class="icon-btn" title="Copy current note">📋</button>
     <button id="exportTxt" class="icon-btn" title="Export as .txt">💾</button>
     <button id="increaseFont" class="icon-btn" title="Increase text size">🔍</button>
@@ -641,6 +642,11 @@
       }
 
       // Icon actions
+      document.getElementById('newNote').addEventListener('click', () => {
+        createNewNote();
+        editor.focus();
+      });
+      
       document.getElementById('copyText').addEventListener('click', () => {
         const text = state.lines.join('\n');
         navigator.clipboard.writeText(text).then(() => {
