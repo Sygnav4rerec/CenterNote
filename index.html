@@ -17,6 +17,7 @@
       --ui-size: 14px;
       --max-width: 1000px;
       --toolbar-h: 96px;      /* toolbar height for calculations */
+      --center-gap: 22px;     /* gap between history and input areas */
       --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
       --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
     }
@@ -129,9 +130,9 @@
       left: 50%;
       transform: translateX(-50%);
       width: min(100%, var(--max-width));
-      height: calc(45svh - 120px); /* more space for expanded input */
+      height: calc(45svh - 120px);
       overflow: visible;
-      padding-bottom: 20px;
+      padding-bottom: var(--center-gap);
     }
     .history {
       height: 100%;
@@ -189,7 +190,7 @@
     /* Current input window (center area) */
     .input-wrap { 
       position: fixed;
-      top: calc(50svh); /* moved up for better centering */
+      top: calc(50svh + var(--center-gap)/2); /* offset by half the gap */
       left: 50%;
       transform: translate(-50%, -50%);
       width: min(100%, var(--max-width));
@@ -343,9 +344,26 @@
       .line { transition: none; }
     }
     
+    /* Screenshot mode - hide chrome (press P) */
+    body.screenshot-mode .topbar,
+    body.screenshot-mode .toolbar,
+    body.screenshot-mode .glyph-toggle,
+    body.screenshot-mode .glyph-panel {
+      display: none !important;
+    }
+    
+    body.screenshot-mode .history-wrap {
+      top: 20px;
+      height: calc(45svh - 40px);
+    }
+    
     /* Responsive tweaks */
     @media (max-width: 520px) {
-      :root { --input-size: 26px; --line-size: 16px; }
+      :root { 
+        --input-size: 26px; 
+        --line-size: 16px;
+        --center-gap: 18px; /* tighter gap on mobile */
+      }
       .menu-btn { padding: 8px 10px; }
       .dropdown { min-width: 200px; }
     }
@@ -797,6 +815,17 @@
       }
 
       // Initialize
+      // Screenshot mode toggle (P key)
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'p' || e.key === 'P') {
+          // Only toggle if not typing in input areas
+          if (!e.target.isContentEditable && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+            e.preventDefault();
+            document.body.classList.toggle('screenshot-mode');
+          }
+        }
+      });
+      
       renderCategoryButtons();
       renderToolbar();
       load();
