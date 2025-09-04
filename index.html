@@ -122,26 +122,29 @@
       font-size: 13px;
     }
 
-    /* History list (above input) */
+    /* History text window (upper area) */
     .history-wrap {
       position: absolute;
       top: 60px;
       left: 50%;
       transform: translateX(-50%);
       width: min(100%, var(--max-width));
-      height: calc(50svh - 100px); /* more space, better calculation */
-      overflow: hidden;
+      height: calc(50svh - 120px); /* clear separation from input */
+      overflow: visible; /* allow scrolling */
+      border-bottom: 1px solid rgba(255,255,255,0.05); /* subtle separator */
+      padding-bottom: 20px;
     }
     .history {
       height: 100%;
       overflow-y: auto;
-      padding: 0 clamp(16px, 4vw, 40px) calc(var(--toolbar-h) + 12px);
+      overflow-x: hidden;
+      padding: 0 clamp(16px, 4vw, 40px) 20px;
       display: flex;
       flex-direction: column;
-      justify-content: flex-end;
-      gap: 6px; /* tighter, more consistent */
+      justify-content: flex-start; /* start from top, scroll naturally */
+      gap: 6px;
       scroll-behavior: smooth;
-      scrollbar-gutter: stable; /* avoid nudge when scrollbar appears */
+      scrollbar-gutter: stable;
     }
     .history:empty {
       display: none;
@@ -177,15 +180,18 @@
       user-select: text;
     }
 
-    /* Fixed center input */
+    /* Current input window (center area) */
     .input-wrap { 
       position: fixed;
-      top: calc((100svh - var(--toolbar-h)) / 2); /* better centering */
+      top: calc((100svh - var(--toolbar-h)) / 2);
       left: 50%;
       transform: translate(-50%, -50%);
       width: min(100%, var(--max-width));
-      padding: 0 clamp(16px, 4vw, 40px);
+      padding: 20px clamp(16px, 4vw, 40px); /* generous padding for multi-line */
       z-index: 5;
+      background: rgba(0,0,0,0.3); /* subtle background to separate areas */
+      border-radius: 12px;
+      backdrop-filter: blur(8px);
     }
 
     .input {
@@ -200,7 +206,10 @@
       line-height: 1.5;
       text-align: left;
       min-height: calc(var(--input-size) * 1.5);
-      padding-inline: 8px; /* tiny breathing room */
+      max-height: 40vh; /* limit height but allow expansion */
+      overflow-y: auto;
+      padding: 8px;
+      resize: none;
     }
 
     /* Contenteditable placeholder */
@@ -552,7 +561,10 @@
           frag.appendChild(div);
         });
         historyEl.appendChild(frag);
-        historyEl.scrollTop = historyEl.scrollHeight;
+        // Scroll to bottom to show newest entries
+        setTimeout(() => {
+          historyEl.scrollTop = historyEl.scrollHeight;
+        }, 0);
       }
 
       function addLine(text) {
