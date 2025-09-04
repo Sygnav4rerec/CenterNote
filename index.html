@@ -129,10 +129,9 @@
       left: 50%;
       transform: translateX(-50%);
       width: min(100%, var(--max-width));
-      height: calc(50svh - 200px); /* much more separation from input */
+      height: calc(45svh - 120px); /* more space for expanded input */
       overflow: visible;
-      border-bottom: 1px solid rgba(255,255,255,0.05);
-      padding-bottom: 40px; /* extra buffer space */
+      padding-bottom: 20px;
     }
     .history {
       height: 100%;
@@ -183,17 +182,13 @@
     /* Current input window (center area) */
     .input-wrap { 
       position: fixed;
-      top: calc(60svh); /* move down to avoid overlap */
+      top: calc(50svh); /* moved up for better centering */
       left: 50%;
       transform: translate(-50%, -50%);
       width: min(100%, var(--max-width));
-      padding: 20px clamp(16px, 4vw, 40px);
-      z-index: 10; /* higher z-index */
-      background: rgba(11,11,11,0.95); /* more opaque background */
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 12px;
-      backdrop-filter: blur(12px);
-      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      padding: 40px clamp(24px, 6vw, 60px); /* expanded padding for larger area */
+      z-index: 10;
+      /* All borders and visual separators removed for clean look */
     }
 
     .input {
@@ -493,11 +488,20 @@
         localStorage.setItem(NOTES_KEY, JSON.stringify(state.notes));
       }
       
-      function createNewNote() {
+      function createNewNote(customName = null) {
         const noteId = Date.now().toString();
+        let title = 'New Note';
+        if (customName) {
+          title = customName;
+        } else {
+          const timestamp = new Date().toLocaleDateString('en-US', {
+            month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
+          });
+          title = `Note ${timestamp}`;
+        }
         const note = {
           id: noteId,
-          title: 'New Note',
+          title: title,
           lines: [],
           created: new Date().toISOString()
         };
@@ -643,7 +647,13 @@
 
       // Icon actions
       document.getElementById('newNote').addEventListener('click', () => {
-        createNewNote();
+        const noteName = prompt('Enter a name for your new note:', '');
+        if (noteName !== null && noteName.trim() !== '') {
+          createNewNote(noteName.trim());
+        } else if (noteName !== null) {
+          createNewNote(); // User entered empty name, use default
+        }
+        // If user cancelled (noteName === null), do nothing
         editor.focus();
       });
       
